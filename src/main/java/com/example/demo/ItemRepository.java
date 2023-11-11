@@ -4,4 +4,8 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.MySQLStorageEngine;
 import org.springframework.data.repository.CrudRepository;
 
-public interface ItemRepository extends CrudRepository<Item,Integer>{}
+import java.util.Optional;
+
+public interface ItemRepository extends CrudRepository<Item,Integer>{
+    Optional<Iterable<Item>> findItemByName(String name);
+}
