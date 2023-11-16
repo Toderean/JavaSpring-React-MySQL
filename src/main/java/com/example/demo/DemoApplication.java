@@ -15,6 +15,6 @@ public class DemoApplication {
 
 	@GetMapping
 	public String text(){
-		return "Buna dimineata!";
+		return "Buna dimineata magazine!";
 	}
 }

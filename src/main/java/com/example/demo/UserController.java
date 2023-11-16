@@ -23,7 +23,7 @@ public class UserController {
         n.setLastName(lastName);
         n.setEmail(email);
         userRepository.save(n);
-        return "Succes";
+        return "Succes!!";
     }
 
     @GetMapping("/{id}")
