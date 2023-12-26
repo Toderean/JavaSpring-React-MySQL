@@ -22,6 +22,21 @@ public class Item {
     @Column(name = "Name")
     private String name;
 
+    @Column(name = "Cantity")
+    private Integer cantity;
+
+    @Column(name = "Category")
+    private String category;
+
+    @Column(name = "Price")
+    private float price;
+
+    @Column(name = "Poster")
+    private String poster;
+
+    @Column(name = "TrailerLink")
+    private String trailerLink;
+
     public Integer getId() {
         return id;
     }
@@ -36,6 +51,22 @@ public class Item {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public Integer getCantity() {
+        return cantity;
+    }
+
+    public void setCantity(Integer cantity) {
+        this.cantity = cantity;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String categorie) {
+        this.category = categorie;
     }
 
     public float getPrice() {
@@ -61,14 +92,4 @@ public class Item {
     public void setTrailerLink(String trailerLink) {
         this.trailerLink = trailerLink;
     }
-
-    @Column(name = "Price")
-    private float price;
-
-    @Column(name = "Poster")
-    private String poster;
-
-    @Column(name = "TrailerLink")
-    private String trailerLink;
-
 }

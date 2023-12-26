@@ -6,40 +6,42 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/laba")
+@RequestMapping()
 public class UserController {
 
     @Autowired
     private UserRepository userRepository;
 
-    @GetMapping("/allUsers")
+    @GetMapping("/all")
     public @ResponseBody Iterable<User> getAllUsers(){
         return userRepository.findAll();
     }
 
-    public @ResponseBody String addNewUser(@RequestParam String firstName, @RequestParam String lastName, @RequestParam String email){
-        User n = new User();
-        n.setFirstName(firstName);
-        n.setLastName(lastName);
-        n.setEmail(email);
-        userRepository.save(n);
-        return "Succes!!";
+    @PostMapping("/signup")
+    public String addNewUser(@RequestBody User user){
+        User newUser = new User();
+        newUser.setFirstName(user.getFirstName());
+        newUser.setLastName(user.getLastName());
+        newUser.setEmail(user.getEmail());
+        newUser.setPassword(user.getPassword());
+        userRepository.save(newUser);
+        return "User signed up successfully!";
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/byId/{id}")
     public @ResponseBody Optional<User> getUserById(@PathVariable Integer id){
         return userRepository.findById(id);
     }
 
-    @GetMapping("/{name}")
+    @GetMapping("/byFirstName/{name}")
     public @ResponseBody Optional<User> getUserByFirstName(@PathVariable String name){
         return userRepository.findByFirstName(name);
     }
 
-    public @ResponseBody String deleteUser(Integer id){
+    @DeleteMapping("/{id}")
+    public @ResponseBody String deleteUser(@PathVariable Integer id){
         userRepository.deleteById(id);
-        return "Succes";
+        return "User deleted successfully!";
     }
-
 
 }
