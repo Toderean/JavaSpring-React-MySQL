@@ -1,51 +1,63 @@
 package com.example.demo;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
 @RestController
-@RequestMapping()
-public class ItemController {
+@RequestMapping("/items")
+public class ItemController {   
 
     @Autowired
     private ItemRepository itemRepository;
 
-    @GetMapping("/iteme")
-    public @ResponseBody Iterable<Item> getAllItems(){
+    @GetMapping("/all")
+        public @ResponseBody Iterable<Item> getAllItems(){
         return itemRepository.findAll();
     }
 
-    @PostMapping("/admin/addItem")
-    public @ResponseBody String addNewItem(@RequestParam String Name,
-                                           @RequestParam float price,
-                                           @RequestParam Integer Cantity,
-                                           @RequestParam String Category,
-                                           @RequestParam String ImageURL,
-                                           @RequestParam String video){
+    @PostMapping
+    public ResponseEntity<Item> addNewItem(@RequestBody Item item){
         Item n = new Item();
-        n.setName(Name);
-        n.setPrice(price);
-        n.setCantity(Cantity);
-        n.setCategory(Category);
-        n.setPoster(ImageURL);
-        if(video.isEmpty())
+        n.setId(item.getId());
+        n.setName(item.getName());
+        n.setPrice(item.getPrice());
+        n.setCantity(item.getCantity());
+        n.setCategory(item.getCategory());
+        n.setPoster(item.getPoster());
+        if(item.getTrailerLink().isEmpty())
             n.setTrailerLink("None");
         else
-            n.setTrailerLink(video);
+            n.setTrailerLink(item.getTrailerLink());
         itemRepository.save(n);
-        return "Succes";
+        return new ResponseEntity<>(n, HttpStatus.CREATED);
     }
 
     @GetMapping("/item/id={id}")
-    public @ResponseBody Optional<Item> getItemById(Integer id){
+    public @ResponseBody Optional<Item> getItemById(@PathVariable Integer id){
         return itemRepository.findById(id);
     }
 
     @GetMapping("/search={name}")
     public @ResponseBody Optional<Iterable<Item>> getItemByName(@PathVariable String name){
         return itemRepository.findItemByName(name);
+    }
+
+
+    @PutMapping("{id}")
+    public ResponseEntity<Item> updateItem(@PathVariable("id") Integer id,
+                                            @RequestBody Item item){
+        Item updatedItem = itemRepository.findById(id).orElseThrow(()-> new RuntimeException());
+        updatedItem.setName(item.getName());
+        updatedItem.setPoster(item.getPoster());
+        updatedItem.setPrice(item.getPrice());
+        updatedItem.setTrailerLink(item.getTrailerLink());
+        updatedItem.setCantity(item.getCantity());
+        updatedItem.setCategory(item.getCategory());
+        return ResponseEntity.ok(updatedItem);
     }
 
     @DeleteMapping("/admin/deleteItems={id}")

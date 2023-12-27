@@ -1,12 +1,14 @@
 package com.example.demo;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
 @RestController
-@RequestMapping()
+@RequestMapping("/users")
 public class UserController {
 
     @Autowired
@@ -17,15 +19,16 @@ public class UserController {
         return userRepository.findAll();
     }
 
-    @PostMapping("/signup")
-    public String addNewUser(@RequestBody User user){
+    @PostMapping()
+    public ResponseEntity<User> addNewUser(@RequestBody User user){
         User newUser = new User();
+        newUser.setId(user.getId());
         newUser.setFirstName(user.getFirstName());
         newUser.setLastName(user.getLastName());
         newUser.setEmail(user.getEmail());
         newUser.setPassword(user.getPassword());
         userRepository.save(newUser);
-        return "User signed up successfully!";
+        return new ResponseEntity<>(newUser, HttpStatus.CREATED);
     }
 
     @GetMapping("/byId/{id}")
