@@ -35,6 +35,9 @@ public class User {
     @Column(name = "Comenzi")
     private Integer idComanda;
 
+    @Column(name = "Admin")
+    private Integer adminFlag;
+
     public String getPassword() {
         return password;
     }
@@ -72,6 +75,14 @@ public class User {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public Integer getAdminFlag() {
+        return adminFlag;
+    }
+
+    public void setAdminFlag(Integer adminFlag) {
+        this.adminFlag = adminFlag;
     }
 
     public Integer getIdComanda() {

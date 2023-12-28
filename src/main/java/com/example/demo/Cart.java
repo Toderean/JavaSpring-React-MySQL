@@ -1,37 +1,33 @@
 package com.example.demo;
 
+import com.example.demo.Item;
+import com.example.demo.User;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 @Data
+@Entity
 @Table(name = "Cart")
-@AllArgsConstructor
-@NoArgsConstructor
 public class Cart {
+
     @Id
-    @Column(name = "ID")
-    private Integer id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "CartId")
+    private Long cartId;
 
-    @Basic
-    Map<Item,Integer> objects = new HashMap<>();
+    @ManyToOne
+    @JoinColumn(name = "UserId")
+    private User user;
 
-    private Integer clientID;
+    @ManyToMany
+    @JoinTable(
+            name = "Cart_Items",
+            joinColumns = @JoinColumn(name = "CartId"),
+            inverseJoinColumns = @JoinColumn(name = "ItemId")
+    )
+    private List<Item> items;
 
-    public float getSum(){
-        float sum = 0;
-        for (Map.Entry<Item,Integer> set : objects.entrySet()){
-            sum += set.getKey().getPrice() * set.getValue();
-        }
-        return sum;
-    }
-
-    public void addItem(Item item,Integer quantity){
-        objects.put(item,quantity);
-    }
+    // Additional properties and methods as needed
 }

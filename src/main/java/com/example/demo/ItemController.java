@@ -22,7 +22,7 @@ public class ItemController {
     @PostMapping
     public ResponseEntity<Item> addNewItem(@RequestBody Item item){
         Item n = new Item();
-        n.setId(item.getId());
+        n.setId((int) (itemRepository.count() + 1));
         n.setName(item.getName());
         n.setPrice(item.getPrice());
         n.setCantity(item.getCantity());
