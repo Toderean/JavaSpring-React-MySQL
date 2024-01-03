@@ -5,7 +5,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
+
+import static reactor.core.Disposables.swap;
 
 @RestController
 @RequestMapping("/items")
@@ -14,9 +19,24 @@ public class ItemController {
     @Autowired
     private ItemRepository itemRepository;
 
-    @GetMapping("/all")
+    @GetMapping("/all/filter=0")
         public @ResponseBody Iterable<Item> getAllItems(){
         return itemRepository.findAll();
+    }
+    @GetMapping("/all/filter=1")
+    public @ResponseBody Iterable<Item> getAllItemsFilter(){
+        List<Item> aux = new ArrayList<>((Collection) itemRepository.findAll());
+        int n = aux.size();
+        for (int i = 0; i < n - 1; i++) {
+            for (int j = 0; j < n - i - 1; j++) {
+                if (aux.get(j + 1).getPrice() < aux.get(j).getPrice()) {
+                    Item temp = aux.get(j);
+                    aux.set(j, aux.get(j + 1));
+                    aux.set(j + 1, temp);
+                }
+            }
+        }
+        return aux;
     }
 
     @PostMapping

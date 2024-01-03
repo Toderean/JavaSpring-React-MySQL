@@ -5,6 +5,7 @@ import com.example.demo.User;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -17,7 +18,7 @@ public class Cart {
     @Column(name = "CartId")
     private Long cartId;
 
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "UserId")
     private User user;
 
@@ -27,7 +28,6 @@ public class Cart {
             joinColumns = @JoinColumn(name = "CartId"),
             inverseJoinColumns = @JoinColumn(name = "ItemId")
     )
-    private List<Item> items;
+    private List<Item> items = new ArrayList<>();
 
-    // Additional properties and methods as needed
 }

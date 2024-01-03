@@ -26,11 +26,20 @@ public class UserController {
     @PostMapping()
     public ResponseEntity<User> addNewUser(@RequestBody User user){
         User newUser = new User();
+        if(userRepository.findByEmail(user.getEmail()).isPresent()){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
+
         newUser.setId((int) (userRepository.count() + 1));
         newUser.setFirstName(user.getFirstName());
         newUser.setLastName(user.getLastName());
         newUser.setEmail(user.getEmail());
         newUser.setPassword(user.getPassword());
+
+        Cart cart = new Cart();
+        cart.setUser(newUser);
+        newUser.setCart(cart);
+
         userRepository.save(newUser);
         return new ResponseEntity<>(newUser, HttpStatus.CREATED);
     }
