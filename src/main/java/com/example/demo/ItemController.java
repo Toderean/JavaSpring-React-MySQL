@@ -1,5 +1,7 @@
 package com.example.demo;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,14 +12,17 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-import static reactor.core.Disposables.swap;
-
 @RestController
 @RequestMapping("/items")
 public class ItemController {   
 
     @Autowired
     private ItemRepository itemRepository;
+    private final EntityManager entityManager;
+
+    public ItemController(EntityManager entityManager) {
+        this.entityManager = entityManager;
+    }
 
     @GetMapping("/all/filter=0")
         public @ResponseBody Iterable<Item> getAllItems(){
@@ -62,8 +67,23 @@ public class ItemController {
     }
 
     @GetMapping("/search={name}")
-    public @ResponseBody Optional<Iterable<Item>> getItemByName(@PathVariable String name){
-        return itemRepository.findItemByName(name);
+    public @ResponseBody ResponseEntity<Optional<Object>> getItemByName(@PathVariable String name) {
+       try{
+        String jpqlQuery = "SELECT i FROM Item i WHERE i.name = :name";
+        TypedQuery<Item> query = entityManager.createQuery(jpqlQuery, Item.class);
+        query.setParameter("name", name);
+
+        List<Item> resultList = query.getResultList();
+        if (!resultList.isEmpty()) {
+            return ResponseEntity.ok(Optional.of(resultList.get(0)));
+        } else {
+            return ResponseEntity.ok(Optional.empty());
+        }
+    } catch (Exception e) {
+        // Log the exception for further investigation
+        e.printStackTrace();
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Optional.empty());
+    }
     }
 
 

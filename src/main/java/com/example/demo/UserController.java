@@ -9,6 +9,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Optional;
 
 @RestController
@@ -39,7 +41,6 @@ public class UserController {
         Cart cart = new Cart();
         cart.setUser(newUser);
         newUser.setCart(cart);
-
         userRepository.save(newUser);
         return new ResponseEntity<>(newUser, HttpStatus.CREATED);
     }
@@ -48,12 +49,15 @@ public class UserController {
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@RequestBody User loginRequest) {
         try {
-            System.out.println(loginRequest.getEmail());
             User user = userRepository.findByEmail(loginRequest.getEmail())
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
             if (loginRequest.getPassword().equals(user.getPassword())) {
                 // Authentication logic
+
+                // Write user data to a JSON file (for demonstration purposes)
+                writeUserDataToFile(user);
+
                 return ResponseEntity.ok("Login successful");
             } else {
                 return ResponseEntity.badRequest().body("Invalid credentials");
@@ -64,6 +68,28 @@ public class UserController {
 
             // Return an error response to the client
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal Server Error");
+        }
+    }
+
+    private void writeUserDataToFile(User user) {
+        try (FileWriter fileWriter = new FileWriter("userData.json")) {
+            String userDataJson = String.format("{\"id\":\"%d\"," +
+                                                "\"first_name\":\"%s\"," +
+                                                "\"last_name\":\"%s\"," +
+                                                "\"email\":\"%s\"," +
+                                                "\"comenzi\":\"%d\","+
+                                                "\"password\":\"%s\","+
+                                                "\"admin\":\"%s\"}",
+                    user.getId(),
+                    user.getFirstName(),
+                    user.getLastName(),
+                    user.getEmail(),
+                    user.getIdComanda(),
+                    user.getPassword(),
+                    user.getAdminFlag());
+            fileWriter.write(userDataJson);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
