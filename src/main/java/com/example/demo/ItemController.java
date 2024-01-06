@@ -102,6 +102,7 @@ public class ItemController {
 
     @DeleteMapping("/admin/deleteItems={id}")
     public @ResponseBody String deleteItem(@PathVariable Integer id){
+
         itemRepository.deleteById(id);
         return "Succes";
     }

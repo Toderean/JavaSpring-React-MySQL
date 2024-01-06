@@ -1,0 +1,71 @@
+/* Update the gradient to cover the entire body */
+.body-gradient {
+  margin: 0;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start; /* Align items to the top */
+  background: linear-gradient(to bottom right, white, blue);
+  overflow: hidden; /* Prevent default body overflow */
+}
+
+.product-page {
+  width: 100%; /* Occupy the full width */
+  max-width: 1200px; /* Set a maximum width if needed */
+  padding: 20px;
+  box-sizing: border-box; /* Include padding in width calculation */
+}
+
+.product-container {
+  display: grid;
+  grid-template-columns: column; /*repeat(auto-fit, minmax(250px, 1fr));*/ /* Adjust as needed */
+  gap: 20px;
+}
+
+.product-item {
+  border: 2px solid #ccc;
+  border-radius: 10px;
+  padding: 10px;
+  text-align: center;
+}
+
+.product-item img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 5px;
+}
+
+.item-details {
+  border: 2px solid white;
+  padding: 10px;
+  text-align: center;
+  display: flex;
+  flex-direction: column; /* Stack elements vertically */
+}
+
+.item-details h3,
+.item-details p {
+  margin: 5px 0; /* Add some vertical spacing between elements */
+  display: block; /* Ensure each element is on a new line */
+}
+
+.item-details img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 5px;
+}
+
+.add-to-basket {
+  
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: green;
+  color: white;
+  font-size: 24px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

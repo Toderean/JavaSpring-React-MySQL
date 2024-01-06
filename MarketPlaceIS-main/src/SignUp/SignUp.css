@@ -1,0 +1,79 @@
+/* SignUpCassete.css */
+
+.body-signup{
+  margin: 0;
+  height: 100vh;
+  background: linear-gradient(to bottom right, red, orange 70%, orange); /* Blue-green gradient background */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.signup-container {
+  position: relative;
+  border: 2px solid orange;
+  padding: 20px;
+  background-color: white;
+  border-radius: 10px;
+}
+
+.signup-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.input-field {
+  margin-bottom: 15px;
+  padding: 8px;
+  width: 200px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.signup-button {
+  padding: 10px 20px;
+  background-color: orange; /* Green button */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.signup-button:hover {
+  background-color: #7b4b06; /* Darker shade of green on hover */
+}
+
+.login-link {
+  text-align: center;
+  margin-top: 10px;
+}
+
+.login-link p {
+  margin-bottom: 0;
+}
+
+.login-link a {
+  color: red; /* Color for the Log in button */
+  text-decoration: underline;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.login-link button:hover {
+  text-decoration: none;
+}
+
+.back-signup {
+  border-radius: 10px;
+  position: absolute;
+  top: 10px; /* Adjust top position as needed */
+  left: 10px; /* Adjust left position as needed */
+  font-size: 20px;
+  cursor: pointer;
+  color: white; /* Example color for the back button */
+  background-color: green;
+}

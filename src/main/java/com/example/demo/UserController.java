@@ -1,16 +1,16 @@
 package com.example.demo;
 
+import aj.org.objectweb.asm.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -21,14 +21,14 @@ public class UserController {
     private UserRepository userRepository;
 
     @GetMapping("/all")
-    public @ResponseBody Iterable<User> getAllUsers(){
+    public @ResponseBody Iterable<User> getAllUsers() {
         return userRepository.findAll();
     }
 
     @PostMapping()
-    public ResponseEntity<User> addNewUser(@RequestBody User user){
+    public ResponseEntity<User> addNewUser(@RequestBody User user) {
         User newUser = new User();
-        if(userRepository.findByEmail(user.getEmail()).isPresent()){
+        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
 
@@ -38,9 +38,9 @@ public class UserController {
         newUser.setEmail(user.getEmail());
         newUser.setPassword(user.getPassword());
 
-        Cart cart = new Cart();
-        cart.setUser(newUser);
-        newUser.setCart(cart);
+//        Cart cart = new Cart();
+//        cart.setUser(newUser);
+//        newUser.setCart(cart);
         userRepository.save(newUser);
         return new ResponseEntity<>(newUser, HttpStatus.CREATED);
     }
@@ -74,12 +74,12 @@ public class UserController {
     private void writeUserDataToFile(User user) {
         try (FileWriter fileWriter = new FileWriter("userData.json")) {
             String userDataJson = String.format("{\"id\":\"%d\"," +
-                                                "\"first_name\":\"%s\"," +
-                                                "\"last_name\":\"%s\"," +
-                                                "\"email\":\"%s\"," +
-                                                "\"comenzi\":\"%d\","+
-                                                "\"password\":\"%s\","+
-                                                "\"admin\":\"%s\"}",
+                            "\"first_name\":\"%s\"," +
+                            "\"last_name\":\"%s\"," +
+                            "\"email\":\"%s\"," +
+                            "\"comenzi\":\"%d\"," +
+                            "\"password\":\"%s\"," +
+                            "\"admin\":\"%s\"}",
                     user.getId(),
                     user.getFirstName(),
                     user.getLastName(),
@@ -94,24 +94,48 @@ public class UserController {
     }
 
     @GetMapping("/byId/{id}")
-    public @ResponseBody Optional<User> getUserById(@PathVariable Integer id){
+    public @ResponseBody Optional<User> getUserById(@PathVariable Integer id) {
         return userRepository.findById(id);
     }
 
     @GetMapping("/byFirstName/{name}")
-    public @ResponseBody Optional<User> getUserByFirstName(@PathVariable String name){
+    public @ResponseBody Optional<User> getUserByFirstName(@PathVariable String name) {
         return userRepository.findByFirstName(name);
     }
 
     @DeleteMapping("/{id}")
-    public @ResponseBody String deleteUser(@PathVariable Integer id, @RequestParam Integer userId){
-        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-        if(user.getAdminFlag() == 1) {
-            userRepository.deleteById(id);
-            return "User deleted successfully!";
-        }
-        else
-            return "Not an admin.";
-    }
+    public @ResponseBody String deleteUser(@PathVariable Integer id) {
+        try {
+            // Specify the path to your JSON file
+            String jsonFilePath = "userData.json";
 
+            // Create an ObjectMapper instance
+            ObjectMapper objectMapper = new ObjectMapper();
+
+            // Read JSON file and map it to an array of User objects
+            List<User> users = objectMapper.readValue(new File(jsonFilePath),
+                    objectMapper.getTypeFactory().constructCollectionType(List.class, User.class));
+
+            // Find the user by ID
+            Optional<User> userToDelete = users.stream()
+                    .filter(user -> user.getId().equals(id))
+                    .findFirst();
+
+            if (userToDelete.isPresent()) {
+                // Check admin flag
+                if (userToDelete.get().getAdminFlag() == 1) {
+                    // Remove the user from the list
+                    users.remove(id);
+                    return "User deleted successfully!";
+                } else {
+                    return "Not an admin.";
+                }
+            } else {
+                return "User not found.";
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Error deleting user.";
+        }
+    }
 }

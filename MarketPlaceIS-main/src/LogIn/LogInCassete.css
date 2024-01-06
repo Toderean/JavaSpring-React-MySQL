@@ -1,0 +1,75 @@
+/* Login.css */
+.body-login {
+  margin: 0;
+  height: 100vh;
+  background: linear-gradient(to bottom right, white 0%,white 20%, red 90%, red);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.login-container {
+  position: relative;
+  border: 2px solid red;
+  padding: 20px;
+  background-color: white; /* Set background color for the form */
+  border-radius: 10px; /* Add border radius for rounded corners */
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.input-field {
+  margin-bottom: 15px;
+  padding: 8px;
+  width: 200px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.login-button {
+  padding: 10px 20px;
+  background-color: red;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.login-button:hover {
+  background-color: #54040c; /* Darker shade of purple on hover */
+}
+
+.signup-link {
+  text-align: center; /* Center-align the content */
+  margin-top: 10px; /* Add margin from the login button */
+}
+
+.signup-link p {
+  margin-bottom: 0; /* Remove default paragraph margin */
+}
+
+.signup-link a {
+  color: orange; /* Example color for the link */
+  text-decoration: none; /* Remove underline from the link */
+  font-weight: bold; /* Make the link text bold */
+}
+
+.signup-link a:hover {
+  text-decoration: underline; /* Underline the link on hover */
+}
+
+.back-button {
+  border-radius: 10px;
+  position: absolute;
+  top: 10px; /* Adjust top position as needed */
+  left: 10px; /* Adjust left position as needed */
+  font-size: 20px;
+  cursor: pointer;
+  color: white; /* Example color for the back button */
+  background-color: purple;
+}
