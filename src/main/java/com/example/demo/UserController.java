@@ -1,16 +1,20 @@
 package com.example.demo;
 
-import aj.org.objectweb.asm.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.File;
-import java.io.FileWriter;
+
+import java.io.*;
+import java.io.FileReader;
 import java.io.IOException;
-import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -28,19 +32,27 @@ public class UserController {
     @PostMapping()
     public ResponseEntity<User> addNewUser(@RequestBody User user) {
         User newUser = new User();
+        System.out.println(user.toString());
         if (userRepository.findByEmail(user.getEmail()).isPresent()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
-
+        System.out.println(user.getEmail());
+        System.out.println(user.getFirstName());
+        System.out.println(user.getLastName());
+        System.out.println(user.getPassword());
         newUser.setId((int) (userRepository.count() + 1));
         newUser.setFirstName(user.getFirstName());
         newUser.setLastName(user.getLastName());
         newUser.setEmail(user.getEmail());
         newUser.setPassword(user.getPassword());
 
-//        Cart cart = new Cart();
-//        cart.setUser(newUser);
-//        newUser.setCart(cart);
+
+        Cart cart = new Cart();
+        cart.setCartId(Long.valueOf(newUser.getId()));// Set the cart ID to the user's command ID
+        newUser.setIdComanda(Math.toIntExact(cart.getCartId()));
+        cart.setUser(newUser); // Set the user for the cart
+        newUser.setCart(cart); // Set the cart for the user
+
         userRepository.save(newUser);
         return new ResponseEntity<>(newUser, HttpStatus.CREATED);
     }
@@ -53,11 +65,7 @@ public class UserController {
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
             if (loginRequest.getPassword().equals(user.getPassword())) {
-                // Authentication logic
-
-                // Write user data to a JSON file (for demonstration purposes)
                 writeUserDataToFile(user);
-
                 return ResponseEntity.ok("Login successful");
             } else {
                 return ResponseEntity.badRequest().body("Invalid credentials");
@@ -71,15 +79,16 @@ public class UserController {
         }
     }
 
+
     private void writeUserDataToFile(User user) {
         try (FileWriter fileWriter = new FileWriter("userData.json")) {
-            String userDataJson = String.format("{\"id\":\"%d\"," +
+            String userDataJson = String.format("{\"id\":%d," +
                             "\"first_name\":\"%s\"," +
                             "\"last_name\":\"%s\"," +
                             "\"email\":\"%s\"," +
-                            "\"comenzi\":\"%d\"," +
+                            "\"comenzi\":%d," +
                             "\"password\":\"%s\"," +
-                            "\"admin\":\"%s\"}",
+                            "\"admin\":%d}",
                     user.getId(),
                     user.getFirstName(),
                     user.getLastName(),
@@ -103,39 +112,94 @@ public class UserController {
         return userRepository.findByFirstName(name);
     }
 
-    @DeleteMapping("/{id}")
-    public @ResponseBody String deleteUser(@PathVariable Integer id) {
+
+    @PostMapping("/update/id={id}")
+    public ResponseEntity<User> updateUserById(@PathVariable Integer id,
+                                               @RequestBody User user) {
+        System.out.println("Aici e userul"+ user.toString());
         try {
-            // Specify the path to your JSON file
-            String jsonFilePath = "userData.json";
+            User toUpdate = userRepository.findById(id).orElse(null);
 
-            // Create an ObjectMapper instance
-            ObjectMapper objectMapper = new ObjectMapper();
+            if (toUpdate != null) {
+                toUpdate.setFirstName(user.getFirstName());
+                toUpdate.setLastName(user.getLastName());
+                toUpdate.setEmail(user.getEmail());
+                toUpdate.setPassword(user.getPassword());
+                toUpdate.setAdminFlag(user.getAdminFlag());
 
-            // Read JSON file and map it to an array of User objects
-            List<User> users = objectMapper.readValue(new File(jsonFilePath),
-                    objectMapper.getTypeFactory().constructCollectionType(List.class, User.class));
-
-            // Find the user by ID
-            Optional<User> userToDelete = users.stream()
-                    .filter(user -> user.getId().equals(id))
-                    .findFirst();
-
-            if (userToDelete.isPresent()) {
-                // Check admin flag
-                if (userToDelete.get().getAdminFlag() == 1) {
-                    // Remove the user from the list
-                    users.remove(id);
-                    return "User deleted successfully!";
-                } else {
-                    return "Not an admin.";
-                }
+                userRepository.save(toUpdate);
+                return ResponseEntity.ok(toUpdate);
             } else {
-                return "User not found.";
+//                addNewUser(user);
+                return ResponseEntity.notFound().build();
             }
         } catch (Exception e) {
             e.printStackTrace();
-            return "Error deleting user.";
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
+    @GetMapping("/admin")
+    public ResponseEntity<String> adminPanel() throws IOException{
+        BufferedReader reader = new BufferedReader(new FileReader("userData.json"));
+        Integer idUser = 0;
+        String userJson = reader.readLine();
+        JsonFactory factory = new JsonFactory();
+        JsonParser parser = factory.createParser(new StringReader(userJson));
+        while (!parser.isClosed()) {
+            JsonToken jsonToken = parser.nextToken();
+            if (JsonToken.FIELD_NAME.equals(jsonToken)) {
+                String fieldName = parser.getCurrentName();
+                parser.nextToken();
+                switch (fieldName) {
+                    case "id":
+                        idUser = parser.getValueAsInt();
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+        parser.close();
+        User user = userRepository.findById(idUser).orElseThrow(() -> new RuntimeException("User not found"));
+        if (user.getAdminFlag() == 1){
+            return ResponseEntity.ok("Item deleted");
+        }
+        else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @DeleteMapping("/id={id}")
+    public ResponseEntity<String> deleteUser(@PathVariable Integer id) throws IOException {
+        BufferedReader reader = new BufferedReader(new FileReader("userData.json"));
+        Integer idUser = 0;
+        String userJson = reader.readLine();
+        JsonFactory factory = new JsonFactory();
+        JsonParser parser = factory.createParser(new StringReader(userJson));
+        while (!parser.isClosed()) {
+            JsonToken jsonToken = parser.nextToken();
+            if (JsonToken.FIELD_NAME.equals(jsonToken)) {
+                String fieldName = parser.getCurrentName();
+                parser.nextToken();
+                switch (fieldName) {
+                    case "id":
+                        idUser = parser.getValueAsInt();
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+        parser.close();
+        User user = userRepository.findById(idUser).orElseThrow(() -> new RuntimeException("User not found"));
+        if (user.getAdminFlag() == 1){
+            userRepository.deleteById(id);
+            return ResponseEntity.ok("Item deleted");
+        }
+        else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
 }

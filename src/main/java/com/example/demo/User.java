@@ -1,10 +1,7 @@
 package com.example.demo;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Getter
 @Entity
@@ -17,6 +14,8 @@ public class User {
     @Column(name = "ID")
     private Integer id;
 
+    @Setter
+    @Getter
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private Cart cart;
 
@@ -33,7 +32,7 @@ public class User {
     private String password;
 
     @Column(name = "Comenzi")
-    private Integer idComanda;
+    private Integer comenzi;
 
     @Column(name = "Admin")
     private Integer adminFlag;
@@ -86,10 +85,14 @@ public class User {
     }
 
     public Integer getIdComanda() {
-        return idComanda;
+        return comenzi;
     }
 
     public void setIdComanda(Integer idComanda) {
-        this.idComanda = idComanda;
+        this.comenzi = idComanda;
+    }
+
+    public Cart getCart() {
+        return cart;
     }
 }

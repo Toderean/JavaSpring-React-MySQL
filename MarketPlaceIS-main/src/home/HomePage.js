@@ -29,7 +29,7 @@ function HomePage() {
     <div>
       <div className="home">
 
-        <h1 className="title"> Altex De Buget </h1>
+        <h1 className="title"> Web Store </h1>
         <NavBar />
         <div className="item-container">
           {items.map((item, index) => (

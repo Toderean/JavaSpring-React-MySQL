@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import './Item.css'; // Assuming your CSS file is named Item.css
+import "./Item.css"; // Assuming your CSS file is named Item.css
 
 function ItemPage() {
   const { id } = useParams();
@@ -21,7 +21,8 @@ function ItemPage() {
 
   const handleAddToCart = () => {
     console.log(item.id);
-    axios.post(`http://localhost:8080/cart/add-to-cart/${item.id}`)
+    axios
+      .post(`http://localhost:8080/cart/add-to-cart/${item.id}`)
       .then((response) => {
         console.log("Item added to cart successfully");
       })
@@ -32,11 +33,11 @@ function ItemPage() {
 
   useEffect(() => {
     // Apply the class to the body element when the component mounts
-    document.body.classList.add('body-gradient');
+    document.body.classList.add("body-gradient");
 
     // Clean up - remove the class when the component unmounts
     return () => {
-      document.body.classList.remove('body-gradient');
+      document.body.classList.remove("body-gradient");
     };
   }, []);
 
@@ -59,13 +60,12 @@ function ItemPage() {
             />
             <h3>{item.name}</h3>
             <p>Price: ${item.price}</p>
-            <p>Availability: {item.cantity > 0 ? "In stock" : "Out of stock"}</p>
+            <p>
+              Availability: {item.cantity > 0 ? "In stock" : "Out of stock"}
+            </p>
             <p>Category: {item.category}</p>
             <div>
-              <button
-                className="add-to-basket"
-                onClick={handleAddToCart}
-              >
+              <button className="add-to-basket" onClick={handleAddToCart}>
                 +
               </button>
             </div>

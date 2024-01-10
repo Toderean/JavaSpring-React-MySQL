@@ -2,6 +2,7 @@ package com.example.demo;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.tomcat.util.json.JSONParser;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,17 +10,25 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.StringReader;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
+import org.json.simple.parser.*;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.ParseException;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
+import java.io.FileReader;
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/cart")
@@ -33,37 +42,34 @@ public class CartController {
     private ItemRepository itemRepository;
 
     @GetMapping("/get-items")
-    public ResponseEntity<List<Item>> getItemsInCart(@RequestParam Integer userId) {
-        try {
-            String jsonFilePath = "userData.json";
-            ObjectMapper objectMapper = new ObjectMapper();
-
-            List<User> users = objectMapper.readValue(
-                    new File(jsonFilePath),
-                    objectMapper.getTypeFactory().constructCollectionType(List.class, User.class)
-            );
-
-            // Find the user by ID
-            User user = users.stream()
-                    .filter(u -> u.getId().equals(userId))
-                    .findFirst()
-                    .orElse(null);
-
-            if (user == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+    public ResponseEntity<List<Item>> getItemsInCart() throws IOException {
+        BufferedReader reader = new BufferedReader(new FileReader("userData.json"));
+        Integer id = 0;
+        String userJson = reader.readLine();
+        JsonFactory factory = new JsonFactory();
+        JsonParser parser = factory.createParser(new StringReader(userJson));
+        while(!parser.isClosed()){
+            JsonToken jsonToken = parser.nextToken();
+            if(JsonToken.FIELD_NAME.equals(jsonToken)){
+                String fieldName = parser.getCurrentName();
+                parser.nextToken();
+                switch (fieldName){
+                    case "id":id = parser.getValueAsInt(); break;
+                    default: break;
+                }
             }
-
-            Cart userCart = user.getCart();
-            if (userCart != null) {
-                List<Item> itemsInCart = userCart.getItems();
-                return ResponseEntity.ok(itemsInCart);
-            } else {
-                return ResponseEntity.ok(List.of());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
+        parser.close();
+        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+        System.out.println("id-ul userului "+ user.getId());
+
+        Cart cart = user.getCart();
+        System.out.println("cart id " + cart.getCartId());
+//        CartService cartService = new CartService(cartRepository);
+        System.out.println(cart.getItems());
+        if(cart.getItems() == null){
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }else return new ResponseEntity<>(cart.getItems(),HttpStatus.ACCEPTED);
     }
 
     @PostMapping("/update-quantity")
@@ -104,51 +110,93 @@ public class CartController {
         }
     }
 
-    @PostMapping("/add-to-cart")
-    public ResponseEntity<String> addToCart(@RequestParam Integer itemId) {
-        try{
-            BufferedReader reader = new BufferedReader(new FileReader("userData.json"));
-            String userData = reader.readLine();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal Server Error");
+    @PostMapping("/add-to-cart/{itemId}")
+    public ResponseEntity<String> addToCart(@PathVariable Integer itemId) throws IOException {
+        BufferedReader reader = new BufferedReader(new FileReader("userData.json"));
+        Integer id =0;
+        String userJson = reader.readLine();
+        JsonFactory factory = new JsonFactory();
+        JsonParser parser = factory.createParser(new StringReader(userJson));
+        System.out.println(userJson);
+        while(!parser.isClosed()){
+            JsonToken jsonToken = parser.nextToken();
+            if (JsonToken.FIELD_NAME.equals(jsonToken)) {
+                String fieldName = parser.getCurrentName();
+                parser.nextToken(); // Move to the value
+                switch (fieldName) {
+                    case "id":  id = parser.getValueAsInt();
+                                System.out.println(fieldName + ": " + id);
+                                break;
+                    default:
+                        break;
+                }
+            }
         }
-        return null;
+        parser.close();
+        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+        System.out.println("id-ul userului " + user.getId());
+
+        Cart cart = user.getCart();
+        CartService cartsrv = new CartService(cartRepository);
+
+
+        System.out.println("id-ul cartului " + cart.getCartId());
+
+        Item item = itemRepository.findById(itemId).orElseThrow(() -> new RuntimeException("Item not found"));
+        System.out.println("size ul cartului inainte " + cart.cartSize());
+
+        cartsrv.addItemToCart(cart.getCartId(),item);
+
+        System.out.println("size ul cartului dupa" + cart.cartSize());
+        System.out.println("Cartul are:" + cart.getItems() + cart.getCartId());
+
+        return new ResponseEntity<>(HttpStatus.ACCEPTED);
     }
     @GetMapping("/get-cart")
     public ResponseEntity<Cart> getCart(@RequestParam Integer userId) {
-         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-         Cart cart = cartRepository.findByUser(user);
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        Cart cart = cartRepository.findByUser(user);
         return ResponseEntity.ok(cart);
     }
 
     @PostMapping("/finalize-command")
-    public ResponseEntity<String> finalizeCommand(@RequestParam Integer userId) {
+    public ResponseEntity<String> finalizeCommand() {
         try {
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
-
-            Cart cart = user.getCart();
-            List<Item> items = (List<Item>) itemRepository.findAll();
-            if (cart == null) {
-                return ResponseEntity.badRequest().body("Cart not found");
+            BufferedReader reader = new BufferedReader(new FileReader("userData.json"));
+            Integer id =0;
+            String userJson = reader.readLine();
+            JsonFactory factory = new JsonFactory();
+            JsonParser parser = factory.createParser(new StringReader(userJson));
+            System.out.println(userJson);
+            while(!parser.isClosed()){
+                JsonToken jsonToken = parser.nextToken();
+                if (JsonToken.FIELD_NAME.equals(jsonToken)) {
+                    String fieldName = parser.getCurrentName();
+                    parser.nextToken(); // Move to the value
+                    switch (fieldName) {
+                        case "id":  id = parser.getValueAsInt();
+                            System.out.println(fieldName + ": " + id);
+                            break;
+                        default:
+                            break;
+                    }
+                }
             }
-            cart.getItems().clear();
+            parser.close();
+            User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+            Cart cart = user.getCart();
+            CartService cartService = new CartService(cartRepository);
+            List<Item> items = cart.getItems();
+            for(Item product: items){
+               product.setCantity(product.getCantity() - 1);
+               itemRepository.save(product);
+            }
+            cartService.clearCart(cart.getCartId());
 
-            List<Item> itemsInCart = cart.getItems();
-//            for (Item item : itemsInCart) {
-//                Item temp = items.
-//                items.setCantity(updatedQuantity);
-//            }
-
-            // Save the updated cart
-            cartRepository.save(cart);
-
-            return ResponseEntity.ok("Command finalized successfully. Cart items cleared and quantities updated.");
-        } catch (Exception e) {
+        }catch (Exception e){
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Internal Server Error");
         }
+        return null;
     }
 
 }
